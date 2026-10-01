@@ -1,0 +1,40 @@
+{
+  "selected_blob_k": 3,
+  "random_state": 42,
+  "blob_random_state": 0,
+  "samples_per_dataset": 500,
+  "eps": 0.3,
+  "min_samples": 5,
+  "metrics": [
+    {
+      "dataset": "blobs",
+      "algorithm": "K-Means (k=3)",
+      "clusters": 3,
+      "noise_fraction": 0.0,
+      "silhouette_non_noise": 0.659011398261038,
+      "adjusted_rand_score": 1.0
+    },
+    {
+      "dataset": "moons",
+      "algorithm": "K-Means (k=2)",
+      "clusters": 2,
+      "noise_fraction": 0.0,
+      "silhouette_non_noise": 0.49614961008153535,
+      "adjusted_rand_score": 0.44511216044949575
+    },
+    {
+      "dataset": "moons",
+      "algorithm": "DBSCAN",
+      "clusters": 2,
+      "noise_fraction": 0.0,
+      "silhouette_non_noise": 0.38933833783604915,
+      "adjusted_rand_score": 1.0
+    }
+  ],
+  "versions": {
+    "numpy": "2.3.5",
+    "pandas": "3.0.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2"
+  }
+}

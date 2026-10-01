@@ -1,37 +1,63 @@
 # Clustering Algorithms Showcase
 
-A reproducible comparison of K-Means and DBSCAN on synthetic datasets with compact and non-linear cluster shapes.
+[![Python checks](https://github.com/PrashantSinghpns/clustering-algorithms-showcase/actions/workflows/ci.yml/badge.svg)](https://github.com/PrashantSinghpns/clustering-algorithms-showcase/actions/workflows/ci.yml)
 
-## What it demonstrates
+Compare K-Means and DBSCAN on compact blobs and non-linear moons, with data-driven K selection, noise-aware diagnostics, and a DBSCAN sensitivity sweep.
 
-- Scaling features before applying distance-based clustering.
-- Selecting a K-Means cluster count with inertia and silhouette diagnostics.
-- Using K-Means for compact, approximately spherical clusters.
-- Showing why DBSCAN can better recover non-linear moon-shaped clusters.
-- Evaluating cluster recovery with Adjusted Rand Index because synthetic ground truth is available for learning.
+## Run the experiment
 
-This is an algorithm demonstration, not a business prediction model. In real unsupervised problems, ground-truth labels are usually unavailable, so cluster quality needs domain review in addition to diagnostics.
-
-## Correction from the original notebook
-
-The original blob dataset contains three centres, while its final K-Means model used `n_clusters=2`. The cleaned implementation selects and fits `k=3` for that dataset. It keeps `k=2` for the two-moon comparison.
-
-## Project structure
-
-```text
-src/run_clustering.py                    # Reproducible comparison pipeline
-tests/test_clustering.py                 # K-selection checks
-notebooks/clustering_exploration.ipynb   # Original exploratory notebook
-```
-
-## Run locally
+Use Python 3.11 or 3.12. These experiments generate their own synthetic data and need no external download.
 
 ```bash
 python -m venv .venv
-.venv\\Scripts\\activate
-pip install -r requirements.txt
-python src/run_clustering.py
-pytest
+source .venv/bin/activate
+python -m pip install -r requirements.txt pytest
+python src/run_clustering.py --output-dir outputs --eps 0.3 --min-samples 5
+python -m pytest -q
 ```
 
-The script writes diagnostic charts and CSV metrics to `outputs/`.
+For Windows PowerShell, activate with `.\.venv\Scripts\Activate.ps1`.
+
+## Method and interpretation
+
+StandardScaler is fitted separately to 500 blobs (seed 0) and 500 moon samples (seed 42). Blob K is selected from 2–8 by maximum silhouette, without consulting the known synthetic labels. Two-cluster K-Means and DBSCAN are then compared on moons. Adjusted Rand Index uses synthetic ground truth only as a retrospective diagnostic; the sensitivity sweep does not auto-select parameters using ARI.
+
+## Generated evidence
+
+| Output under `outputs/` | Purpose |
+|---|---|
+| `k_selection_metrics.csv` | K-Means inertia and silhouette for valid candidate K values |
+| `clustering_metrics.csv` | ARI, cluster count, noise fraction, and non-noise silhouette |
+| `dbscan_sensitivity.csv` | Effects of changing eps while holding min_samples fixed |
+| `metrics.json` | Selected K, dataset seeds, parameters, metrics, package versions |
+| `kmeans_blobs.png`, `kmeans_moons.png`, `dbscan_moons.png` | Cluster assignments; DBSCAN noise is gray |
+
+The command prints the measured report. Package versions are recorded because exact numerical values can vary across environments. Generated artifacts are ignored by git and can be recreated from the command above.
+
+## Repository map
+
+| Path | Purpose |
+|---|---|
+| `src/` | Runnable experiment and reusable functions |
+| `tests/` | Shape, index, new-sample, or noise-handling checks |
+| `notebooks/` | Original exploratory notebook; the script is the reproducible entry point |
+| `.github/workflows/ci.yml` | Syntax and unit checks on Python 3.11/3.12 |
+
+## Limitations
+
+K-Means assumes compact groups; DBSCAN is sensitive to scaling, eps, and density differences. Silhouette excludes noise here and is null when fewer than two valid clusters remain. Compare it together with noise fraction; it is not a standalone score for the complete DBSCAN assignment.
+
+Synthetic results demonstrate algorithm behavior; they do not establish performance on a business dataset. Apply held-out preprocessing when embedding these methods in a supervised workflow.
+
+
+## Reference experiment
+
+A locally executed synthetic reference run is recorded in [docs/reference_metrics.json](docs/reference_metrics.json), including the actual package versions. It is a reproducibility example, not a production benchmark.
+
+| Dataset | Algorithm | ARI | Clusters | Noise fraction |
+|---|---|---:|---:|---:|
+| blobs | K-Means (k=3) | 1.0000 | 3 | 0.00% |
+| moons | K-Means (k=2) | 0.4451 | 2 | 0.00% |
+| moons | DBSCAN | 1.0000 | 2 | 0.00% |
+
+On moons, K-Means had a higher silhouette despite poorer recovery of the known shape. This demonstrates why a single clustering score cannot replace inspection of geometry and domain context.
